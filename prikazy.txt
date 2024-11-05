@@ -1,0 +1,4 @@
+git add .
+git clone https://github.com/Trebesin-coding/ukol-github-prikazy-thuyduong82.git
+git commit -m "nahrani webovky"
+git push origin main
