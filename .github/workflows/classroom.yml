@@ -1,0 +1,67 @@
+name: Autograding
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-assignment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      # Check if index.html exists and has the centered image of specified size
+      - name: Check for index.html with centered image
+        run: |
+          if [[ ! -f "index.html" ]]; then
+            echo "index.html not found" && exit 1
+          fi
+      
+          # Check for inline style centering
+          if grep -q '<img.*style=".*width:500px;.*height:400px;.*display:block;.*margin:auto;.*"' index.html; then
+            echo "Image is correctly centered using inline styles"
+          else
+            # Check for internal CSS centering in <style> block
+            if grep -q '<style>.*img.*{.*width:500px;.*height:400px;.*display:block;.*margin:auto;.*}.*</style>' index.html; then
+              echo "Image is correctly centered using internal CSS"
+            else
+              # Check for Flexbox centering
+              if grep -q 'display:\s*flex' index.html && grep -q 'justify-content:\s*center' index.html && grep -q 'align-items:\s*center' index.html; then
+                echo "Image is correctly centered using Flexbox"
+              else
+                echo "Image is not properly centered or does not have the specified dimensions" && exit 1
+              fi
+            fi
+          fi
+
+
+
+      # Check for prikazy.txt and verify the commands
+      - name: Check for prikazy.txt and commands
+        run: |
+          if [[ ! -f "prikazy.txt" ]]; then
+            echo "prikazy.txt not found" && exit 1
+          fi
+          REQUIRED_COMMANDS=("git add" "git commit -m" "git push")
+          for cmd in "${REQUIRED_COMMANDS[@]}"; do
+            if ! grep -q "$cmd" prikazy.txt; then
+              echo "Missing command: $cmd in prikazy.txt" && exit 1
+            fi
+          done
+      # Check if the initial commit message was "nahrání webovky"
+      - name: Verify initial commit message
+        run: |
+          INITIAL_COMMIT=$(git log --pretty=format:"%s" | tail -1)
+          if if [[ "$INITIAL_COMMIT" != "nahrání webovky" || "$INITIAL_COMMIT" != "nahradni webovky" ]]; then
+            echo "Initial commit message is not 'nahrání webovky'" && exit 1
+          fi
+      # Check if the final commit message is "úkol splněn"
+      - name: Verify final commit message
+        run: |
+          LATEST_COMMIT=$(git log -1 --pretty=format:"%s")
+          if [[ "$LATEST_COMMIT" != "úkol splněn" || "$LATEST_COMMIT" != "ukol splnen" ]]; then
+            echo "Final commit message is not 'úkol splněn'" && exit 1
+          fi
